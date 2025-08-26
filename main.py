@@ -12,6 +12,7 @@ from google.oauth2.service_account import Credentials
 from enum import Enum
 from datetime import datetime, UTC, timedelta
 from uuid import UUID
+from fastapi.middleware.cors import CORSMiddleware
 
 # --- Configuration & Setup ---
 # Load credentials from environment variable and decode from base64
@@ -66,7 +67,7 @@ def row_to_dict(headers: List[str], row: List[str]) -> dict:
 # --- Pydantic Models ---
 class RSVPStatus(str, Enum):
     CONFIRMED = "confirmed"
-    REJECTED = "rejected"
+    DECLINED = "declined"
 
 class PersonType(str, Enum):
     ADULT = "adult"
@@ -113,7 +114,14 @@ class Testimonial(TestimonialRequest):
     updated_at: datetime
 
 # --- FastAPI App ---
-app = FastAPI(title="A&M Wedding", dependencies=[Depends(get_current_user)])
+app = FastAPI(title="A&M Wedding")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 
 
@@ -168,7 +176,7 @@ def register_gifts(gifts: List[GiftRequest]) -> dict:
 def update_gift_purchased(purchase: GiftPurchaseRequest) -> dict:
     """Updates a gift's status to purchased."""
     ws = get_worksheet("gifts")
-    cell = ws.find(purchase.id, in_column=1)
+    cell = ws.find(str(purchase.id), in_column=1)
     if not cell:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Gift not found.")
 

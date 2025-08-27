@@ -114,7 +114,7 @@ class Testimonial(TestimonialRequest):
     updated_at: datetime
 
 # --- FastAPI App ---
-app = FastAPI(title="A&M Wedding")
+app = FastAPI(title="A&M Wedding", dependencies=[Depends(get_current_user)])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
